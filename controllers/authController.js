@@ -5,48 +5,74 @@ const sendEmail = require('../utils/sendEmail');
 const sendSMS = require('../utils/sendSMS');
 const crypto = require('crypto');
 
+// Register
 exports.register = async (req, res) => {
     const { email, phone, password } = req.body;
+    console.log(email, phone, password);
+
+    if (!email && !phone) {
+        return res.status(400).json({ msg: 'Either email or phone is required' });
+    }
+    if (!password) {
+        return res.status(400).json({ msg: 'Password is required' });
+    }
 
     try {
-        let user = await User.findOne({ email });
+        // Build the query object
+        let query = { email };
+        if (phone) {
+            query = {
+                $or: [{ email }, { phone }]
+            };
+        } else {
+            query = { email };
+        }
 
-        if (user) {
+        // Check if user already exists
+        const existingUser = await User.findOne(query);
+        if (existingUser) {
             return res.status(400).json({ msg: 'User already exists' });
         }
 
-        user = new User({
-            email,
-            phone,
-            password: await bcrypt.hash(password, 10),
-            emailVerificationToken: crypto.randomBytes(2).toString('hex'),
-            phoneVerificationToken: crypto.randomBytes(6).toString('hex')
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create a new user object
+        const newUser = new User({
+            email: email || null,
+            phone: phone || null,
+            password: hashedPassword,
+            emailVerificationToken: email ? Math.floor(100000 + Math.random() * 900000).toString() : undefined,
+            phoneVerificationToken: phone ? Math.floor(100000 + Math.random() * 900000).toString() : undefined,
         });
 
-        await user.save();
+        // Save the user to the database
+        await newUser.save();
 
-        sendEmail(user.email, 'Email Verification', `Your verification code is ${user.emailVerificationToken}`);
-        sendSMS(user.phone, `Your verification code is ${user.phoneVerificationToken}`);
+        // Send verification email or SMS
+        if (email) {
+            await sendEmail(email, 'Verify your email', `Your verification code is: ${newUser.emailVerificationToken}`);
+        } else if (phone) {
+            await sendSMS(phone, `Your verification code is: ${newUser.phoneVerificationToken}`);
+        }
 
-        res.send('Registration successful. Please check your email and phone for verification codes.');
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        res.status(201).json({ msg: 'User registered successfully. Please verify your email or phone.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
 
+// Verify Email
 exports.verifyEmail = async (req, res) => {
     const { email, token } = req.body;
+    console.log(email, token)
 
     try {
-        let user = await User.findOne({ email });
+        const user = await User.findOne({ email });
 
-        if (!user) {
-            return res.status(400).json({ msg: 'User not found' });
-        }
-
-        if (user.emailVerificationToken !== token) {
-            return res.status(400).json({ msg: 'Invalid token' });
+        if (!user || user.emailVerificationToken !== token) {
+            return res.status(400).json({ msg: 'Invalid token or user not found' });
         }
 
         user.emailVerified = true;
@@ -54,80 +80,78 @@ exports.verifyEmail = async (req, res) => {
 
         await user.save();
 
-        res.send('Email verified successfully.');
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        res.status(200).json({ msg: 'Email verified successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
 
+// Verify Phone
 exports.verifyPhone = async (req, res) => {
     const { phone, token } = req.body;
 
     try {
-        let user = await User.findOne({ phone });
+        const user = await User.findOne({ phone });
 
-        if (!user) {
-            return res.status(400).json({ msg: 'User not found' });
-        }
-
-        if (user.phoneVerificationToken !== token) {
-            return res.status(400).json({ msg: 'Invalid token' });
+        if (!user || user.phoneVerificationToken !== token) {
+            return res.status(400).json({ msg: 'Invalid token or user not found' });
         }
 
         user.phoneVerified = true;
-        user.phoneVerificationToken = undefined;
+        user.phoneVerificationToken = undefined; // Clear the token after verification
 
         await user.save();
 
-        res.send('Phone verified successfully.');
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        res.status(200).json({ msg: 'Phone verified successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
 
+// Login
 exports.login = async (req, res) => {
     const { email, phone, password } = req.body;
 
     try {
-        let user = email ? await User.findOne({ email }) : await User.findOne({ phone });
+        // Build the query object
+        let query = { email };
+        if (phone) {
+            query = {
+                $or: [{ email }, { phone }]
+            };
+        } else {
+            query = { email };
+        }
 
+        // Find the user by email or phone
+        const user = await User.findOne(query);
         if (!user) {
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
+        console.log(user.password, password)
+        // Check if the password matches
         const isMatch = await bcrypt.compare(password, user.password);
-
         if (!isMatch) {
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
+        // Check if the email or phone is verified
         if (email && !user.emailVerified) {
-            return res.status(400).json({ msg: 'Email not verified' });
+            return res.status(400).json({ msg: 'Please verify your email first' });
         }
-
         if (phone && !user.phoneVerified) {
-            return res.status(400).json({ msg: 'Phone not verified' });
+            return res.status(400).json({ msg: 'Please verify your phone first' });
         }
 
-        const payload = {
-            user: {
-                id: user.id
-            }
-        };
+        // Generate JWT token
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token });
-            }
-        );
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        res.status(200).json({ token });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
