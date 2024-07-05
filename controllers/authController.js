@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
-const sendSMS = require('../utils/sendSMS');
+// const sendSMS = require('../utils/sendSMS');
 const crypto = require('crypto');
 
 // Register
@@ -53,7 +53,8 @@ exports.register = async (req, res) => {
         if (email) {
             await sendEmail(email, 'Verify your email', `Your verification code is: ${newUser.emailVerificationToken}`);
         } else if (phone) {
-            await sendSMS(phone, `Your verification code is: ${newUser.phoneVerificationToken}`);
+            // await sendSMS(phone, `Your verification code is: ${newUser.phoneVerificationToken}`);
+            
         }
 
         res.status(201).json({ msg: 'User registered successfully. Please verify your email or phone.' });
@@ -121,8 +122,6 @@ exports.login = async (req, res) => {
             query = {
                 $or: [{ email }, { phone }]
             };
-        } else {
-            query = { email };
         }
 
         // Find the user by email or phone
@@ -131,7 +130,6 @@ exports.login = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
-        console.log(user.password, password)
         // Check if the password matches
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {

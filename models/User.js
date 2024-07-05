@@ -25,6 +25,10 @@ const UserSchema = new mongoose.Schema({
     phoneVerificationToken: {
         type: String
     },
+    balance: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
         default: Date.now
