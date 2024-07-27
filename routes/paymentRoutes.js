@@ -1,10 +1,10 @@
 const express = require('express');
-const { getAllCryptos, createCrypto } = require('../controllers/cryptoController');
+const { getAllPayments, createPaymentMethod } = require('../controllers/paymentController');
 const router = express.Router();
 
 router.route('/')
-  .get(getAllCryptos)
-  .post(createCrypto);
+  .get(getAllPayments)
+  .post(createPaymentMethod);
 
 // Implement other routes as needed
 

@@ -32,7 +32,15 @@ const UserSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    pin: {
+        type: String,
+        select: false
+    },
+    role: {
+        type: String,
+        select: false
+    },
 });
 
 module.exports = mongoose.model('User', UserSchema);

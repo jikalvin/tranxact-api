@@ -1,10 +1,10 @@
 const express = require('express');
-const { getAllCryptos, createCrypto } = require('../controllers/cryptoController');
+const { getAllKycRecords, createKycRecord } = require('../controllers/kycController');
 const router = express.Router();
 
 router.route('/')
-  .get(getAllCryptos)
-  .post(createCrypto);
+  .get(getAllKycRecords)
+  .post(createKycRecord);
 
 // Implement other routes as needed
 

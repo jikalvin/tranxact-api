@@ -1,14 +1,29 @@
 const mongoose = require('mongoose');
 
-const TransactionSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    type: { type: String, required: true, enum: ['buy', 'sell'] },
-    symbol: { type: String, required: true },
-    amount: { type: Number, required: true },
-    price: { type: Number, required: true },
-    totalCost: { type: Number },
-    totalRevenue: { type: Number },
-    date: { type: Date, default: Date.now }
+const transactionSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    cryptoId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Crypto',
+        required: true
+    },
+    amount: {
+        type: Number,
+        required: true
+    },
+    type: {
+        type: String,
+        enum: ['buy', 'sell'],
+        required: true
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    }
 });
 
-module.exports = mongoose.model('Transaction', TransactionSchema);
+module.exports = mongoose.model('Transaction', transactionSchema);

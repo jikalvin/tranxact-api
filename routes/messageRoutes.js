@@ -1,10 +1,10 @@
 const express = require('express');
-const { getAllCryptos, createCrypto } = require('../controllers/cryptoController');
+const { getAllMessages, createMessage } = require('../controllers/messageController');
 const router = express.Router();
 
 router.route('/')
-  .get(getAllCryptos)
-  .post(createCrypto);
+  .get(getAllMessages)
+  .post(createMessage);
 
 // Implement other routes as needed
 

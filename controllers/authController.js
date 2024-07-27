@@ -2,13 +2,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
-// const sendSMS = require('../utils/sendSMS');
-const crypto = require('crypto');
+const admin = require('../firebase'); // Import Firebase Admin SDK
 
-// Register
+// User registration
 exports.register = async (req, res) => {
     const { email, phone, password } = req.body;
-    console.log(email, phone, password);
 
     if (!email && !phone) {
         return res.status(400).json({ msg: 'Either email or phone is required' });
@@ -18,26 +16,20 @@ exports.register = async (req, res) => {
     }
 
     try {
-        // Build the query object
         let query = { email };
         if (phone) {
-            query = {
-                $or: [{ email }, { phone }]
-            };
+            query = { $or: [{ email }, { phone }] };
         } else {
             query = { email };
         }
 
-        // Check if user already exists
         const existingUser = await User.findOne(query);
         if (existingUser) {
             return res.status(400).json({ msg: 'User already exists' });
         }
 
-        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create a new user object
         const newUser = new User({
             email: email || null,
             phone: phone || null,
@@ -46,15 +38,20 @@ exports.register = async (req, res) => {
             phoneVerificationToken: phone ? Math.floor(100000 + Math.random() * 900000).toString() : undefined,
         });
 
-        // Save the user to the database
         await newUser.save();
 
-        // Send verification email or SMS
+        // Create a new user in Firebase
+        const firebaseUser = await admin.auth().createUser({
+            email: email,
+            password: password,
+            displayName: email || phone
+        });
+
+        // Send verification email if email is provided
         if (email) {
             await sendEmail(email, 'Verify your email', `Your verification code is: ${newUser.emailVerificationToken}`);
         } else if (phone) {
             // await sendSMS(phone, `Your verification code is: ${newUser.phoneVerificationToken}`);
-            
         }
 
         res.status(201).json({ msg: 'User registered successfully. Please verify your email or phone.' });
@@ -64,10 +61,59 @@ exports.register = async (req, res) => {
     }
 };
 
+// Admin registration
+exports.adminRegister = async (req, res) => {
+    const { email, phone, password } = req.body;
+
+    if (!email && !phone) {
+        return res.status(400).json({ msg: 'Either email or phone is required' });
+    }
+    if (!password) {
+        return res.status(400).json({ msg: 'Password is required' });
+    }
+
+    try {
+        let query = { email };
+        if (phone) {
+            query = { $or: [{ email }, { phone }] };
+        } else {
+            query = { email };
+        }
+
+        const existingUser = await User.findOne(query);
+        if (existingUser) {
+            return res.status(400).json({ msg: 'User already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = new User({
+            email: email || null,
+            phone: phone || null,
+            password: hashedPassword,
+            emailVerified: true, // Skip email verification for admin
+            phoneVerified: true  // Skip phone verification for admin
+        });
+
+        await newUser.save();
+
+        // Create a new user in Firebase
+        const firebaseUser = await admin.auth().createUser({
+            email: email,
+            password: password,
+            displayName: email || phone
+        });
+
+        res.status(201).json({ msg: 'Admin registered successfully.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
+
 // Verify Email
 exports.verifyEmail = async (req, res) => {
     const { email, token } = req.body;
-    console.log(email, token)
 
     try {
         const user = await User.findOne({ email });
@@ -80,6 +126,11 @@ exports.verifyEmail = async (req, res) => {
         user.emailVerificationToken = undefined;
 
         await user.save();
+
+        // Update Firebase user
+        await admin.auth().updateUser(user._id.toString(), {
+            emailVerified: true
+        });
 
         res.status(200).json({ msg: 'Email verified successfully' });
     } catch (error) {
@@ -100,9 +151,15 @@ exports.verifyPhone = async (req, res) => {
         }
 
         user.phoneVerified = true;
-        user.phoneVerificationToken = undefined; // Clear the token after verification
+        user.phoneVerificationToken = undefined;
 
         await user.save();
+
+        // Update Firebase user
+        await admin.auth().updateUser(user._id.toString(), {
+            phoneNumber: phone,
+            phoneNumberVerified: true
+        });
 
         res.status(200).json({ msg: 'Phone verified successfully' });
     } catch (error) {
@@ -116,27 +173,21 @@ exports.login = async (req, res) => {
     const { email, phone, password } = req.body;
 
     try {
-        // Build the query object
         let query = { email };
         if (phone) {
-            query = {
-                $or: [{ email }, { phone }]
-            };
+            query = { $or: [{ email }, { phone }] };
         }
 
-        // Find the user by email or phone
         const user = await User.findOne(query);
         if (!user) {
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
-        // Check if the password matches
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
-        // Check if the email or phone is verified
         if (email && !user.emailVerified) {
             return res.status(400).json({ msg: 'Please verify your email first' });
         }
@@ -144,7 +195,6 @@ exports.login = async (req, res) => {
             return res.status(400).json({ msg: 'Please verify your phone first' });
         }
 
-        // Generate JWT token
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
         res.status(200).json({ token });
