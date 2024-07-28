@@ -1,11 +1,12 @@
 const express = require('express');
-const { getAllCryptos, createCrypto } = require('../controllers/cryptoController');
+const { getAllCryptos, createCrypto, updateCrypto } = require('../controllers/cryptoController');
 const router = express.Router();
 
 router.route('/')
   .get(getAllCryptos)
   .post(createCrypto);
 
-// Implement other routes as needed
+router.route('/:id')
+  .put(updateCrypto);
 
 module.exports = router;
