@@ -6,14 +6,39 @@ const transactionSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    userName: {
+        type: String,
+        required: true
+    },
     cryptoId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Crypto',
         required: true
     },
+    name: {
+        type: String,
+        required: true
+    },
     amount: {
         type: Number,
         required: true
+    },
+    network: {
+        type: String,
+        required: true
+    },
+    buyRate: {
+        type: Number,
+        required: true
+    },
+    sellRate: {
+        type: Number,
+        required: true
+    },
+    status: {
+        type: String,
+        enum: ['pending', 'completed', 'failed'],
+        default: 'pending'
     },
     type: {
         type: String,

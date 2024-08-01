@@ -41,11 +41,11 @@ exports.register = async (req, res) => {
         await newUser.save();
 
         // Create a new user in Firebase
-        const firebaseUser = await admin.auth().createUser({
-            email: email,
-            password: password,
-            displayName: email || phone
-        });
+        // const firebaseUser = await admin.auth().createUser({
+        //     email: email,
+        //     password: password,
+        //     displayName: email || phone
+        // });
 
         // Send verification email if email is provided
         if (email) {
@@ -128,9 +128,9 @@ exports.verifyEmail = async (req, res) => {
         await user.save();
 
         // Update Firebase user
-        await admin.auth().updateUser(user._id.toString(), {
-            emailVerified: true
-        });
+        // await admin.auth().updateUser(user._id.toString(), {
+        //     emailVerified: true
+        // });
 
         res.status(200).json({ msg: 'Email verified successfully' });
     } catch (error) {
