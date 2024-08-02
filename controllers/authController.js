@@ -93,8 +93,9 @@ exports.adminRegister = async (req, res) => {
             email: email || null,
             phone: phone || null,
             password: hashedPassword,
-            emailVerified: true, // Skip email verification for admin
-            phoneVerified: true  // Skip phone verification for admin
+            emailVerified: true,
+            phoneVerified: true,
+            role: 'admin'
         });
 
         await newUser.save();
