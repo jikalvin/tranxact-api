@@ -9,3 +9,13 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.getCurrentUser = (req, res) => {
+  // Assuming you're using some form of authentication middleware
+  // that attaches the user to the request object
+  if (req.user) {
+      res.json(req.user);
+  } else {
+      res.status(401).json({ message: 'Not authenticated' });
+  }
+};
