@@ -6,7 +6,7 @@ const admin = require('../firebase'); // Import Firebase Admin SDK
 
 // User registration
 exports.register = async (req, res) => {
-    const { email, phone, password } = req.body;
+    const { email, phone, password, fullName } = req.body;
 
     if (!email && !phone) {
         return res.status(400).json({ msg: 'Either email or phone is required' });
@@ -33,6 +33,8 @@ exports.register = async (req, res) => {
         const newUser = new User({
             email: email || null,
             phone: phone || null,
+            fullName,
+            role: 'user',
             password: hashedPassword,
             emailVerificationToken: email ? Math.floor(100000 + Math.random() * 900000).toString() : undefined,
             phoneVerificationToken: phone ? Math.floor(100000 + Math.random() * 900000).toString() : undefined,
