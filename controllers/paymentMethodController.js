@@ -20,3 +20,13 @@ exports.updatePaymentMethod = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+exports.getPaymentMethods = async (req, res) => {
+    try {
+      const paymentMethods = await PaymentMethod.find();
+      res.json(paymentMethods);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
+  
