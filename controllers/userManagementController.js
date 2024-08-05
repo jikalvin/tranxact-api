@@ -15,8 +15,8 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { email, phone, fullName, role } = req.body;
-    const updatedUser = await User.findByIdAndUpdate(userId, { email, phone, fullName, role }, { new: true });
+    const { email, phone, fullName, role, status } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(userId, { email, phone, fullName, role, status }, { new: true });
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
