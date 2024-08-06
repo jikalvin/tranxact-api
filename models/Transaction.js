@@ -51,6 +51,9 @@ const transactionSchema = new mongoose.Schema({
     phoneNumber: {
         type: String,
     },
+    transactionHash: {
+        type: String,
+    },
     date: {
         type: Date,
         default: Date.now
