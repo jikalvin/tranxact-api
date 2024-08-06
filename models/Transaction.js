@@ -29,11 +29,11 @@ const transactionSchema = new mongoose.Schema({
     },
     buyRate: {
         type: Number,
-        required: true
+        // required: true
     },
     sellRate: {
         type: Number,
-        required: true
+        // required: true
     },
     status: {
         type: String,
