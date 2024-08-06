@@ -12,7 +12,14 @@ exports.getAllKycRecords = async (req, res) => {
 exports.createKycRecord = async (req, res) => {
   const { userId, documentType, documentNumber, status } = req.body;
   try {
-    const newKycRecord = new KYC({ userId, documentType, documentNumber, status });
+    const uploadedDocument = await uploadDocument(document);
+    const newKycRecord = new KYC({
+      userId,
+      documentType,
+      documentNumber,
+      status,
+      document: uploadedDocument.url
+    });
     await newKycRecord.save();
     res.status(201).json(newKycRecord);
   } catch (error) {

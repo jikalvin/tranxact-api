@@ -45,6 +45,12 @@ const transactionSchema = new mongoose.Schema({
         enum: ['buy', 'sell'],
         required: true
     },
+    walletAddress: {
+        type: String,
+    },
+    phoneNumber: {
+        type: String,
+    },
     date: {
         type: Date,
         default: Date.now

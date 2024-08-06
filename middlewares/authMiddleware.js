@@ -15,6 +15,7 @@ const authMiddleware = async (req, res, next) => {
         // console.log(decoded)
 
         // Optionally, you can fetch the user details from the database if needed
+        // This is an example of reusing existing code and following existing patterns
         const user = await User.findById(decoded.userId).select('+role');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });

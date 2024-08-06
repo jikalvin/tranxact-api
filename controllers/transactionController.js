@@ -11,7 +11,7 @@ exports.getAllTransactions = async (req, res) => {
 };
 
 exports.createTransaction = async (req, res) => {
-  const { userName, name, amount, network, buyRate, sellRate, type, status } = req.body;
+  const { userName, name, amount, network, buyRate, sellRate, type, status, phoneNumber, walletAddress } = req.body;
   try {
     const crypto = await Crypto.findOne({ name });
     if (!crypto) {
@@ -28,7 +28,9 @@ exports.createTransaction = async (req, res) => {
       buyRate,
       sellRate,
       type,
-      status
+      status,
+      walletAddress,
+      phoneNumber
     });
 
     const savedTransaction = await newTransaction.save();
