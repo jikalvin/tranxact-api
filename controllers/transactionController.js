@@ -51,6 +51,16 @@ exports.updateTransaction = async (req, res) => {
   }
 };
 
+//function to get user transaction
+exports.getUserTransaction = async (req, res) => {
+  try {
+    const transactions = await Transaction.find({ userId: req.user.id });
+    res.status(200).json(transactions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.deleteTransaction = async (req, res) => {
   const { id } = req.params;
   try {

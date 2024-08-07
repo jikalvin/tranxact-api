@@ -17,6 +17,7 @@ const authMiddleware = require('./middlewares/authMiddleware');
 const annualStatisticRoutes = require('./routes/annualStatistics');
 const limitController = require('./controllers/limitController');
 const paymentMethodRoutes = require('./routes/paymentMethodRoutes');
+const bannerRoutes = require('./routes/bannerRoutes');
 
 
 // Connect Database
@@ -41,6 +42,7 @@ app.use('/api/payments', authMiddleware, paymentRoutes);
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/annual-statistics', authMiddleware, annualStatisticRoutes);
 app.use('/api/payment-methods', paymentMethodRoutes);
+app.use('/api/banner', bannerRoutes);
 
 const PORT = process.env.PORT || 5000;
 

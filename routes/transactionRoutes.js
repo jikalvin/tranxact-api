@@ -5,10 +5,12 @@ const {
   getAllTransactions,
   createTransaction,
   updateTransaction,
-  deleteTransaction
+  deleteTransaction,
+  getUserTransaction
 } = require('../controllers/transactionController');
 
 router.get('/', authMiddleware, getAllTransactions);
+router.get('/user', authMiddleware, getUserTransaction);
 router.post('/', authMiddleware, createTransaction);
 router.put('/:id', authMiddleware, updateTransaction);
 router.delete('/:id', authMiddleware, deleteTransaction);
