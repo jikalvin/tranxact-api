@@ -1,4 +1,5 @@
 const KYC = require('../models/kycModel');
+const { uploadDocument } = require('../utils/documentUploader'); // Assuming you have this utility function
 
 exports.getAllKycRecords = async (req, res) => {
   try {
@@ -10,13 +11,16 @@ exports.getAllKycRecords = async (req, res) => {
 };
 
 exports.createKycRecord = async (req, res) => {
-  const { userId, documentType, documentNumber, status } = req.body;
+  const { userId, documentType, documentNumber, level, status } = req.body;
+  const { document } = req.files; // Assuming you're using a file upload middleware
+
   try {
     const uploadedDocument = await uploadDocument(document);
     const newKycRecord = new KYC({
       userId,
       documentType,
       documentNumber,
+      level,
       status,
       document: uploadedDocument.url
     });
@@ -26,5 +30,3 @@ exports.createKycRecord = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-// Implement other CRUD operations as needed

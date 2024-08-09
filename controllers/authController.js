@@ -42,13 +42,6 @@ exports.register = async (req, res) => {
 
         await newUser.save();
 
-        // Create a new user in Firebase
-        // const firebaseUser = await admin.auth().createUser({
-        //     email: email,
-        //     password: password,
-        //     displayName: email || phone
-        // });
-
         // Send verification email if email is provided
         if (email) {
             await sendEmail(email, 'Verify your email', `Your verification code is: ${newUser.emailVerificationToken}`);
@@ -56,7 +49,22 @@ exports.register = async (req, res) => {
             // await sendSMS(phone, `Your verification code is: ${newUser.phoneVerificationToken}`);
         }
 
-        res.status(201).json({ msg: 'User registered successfully. Please verify your email or phone.' });
+        // Create JWT token
+        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+        res.status(201).json({
+            msg: 'User registered successfully. Please verify your email or phone.',
+            token,
+            user: {
+                id: newUser._id,
+                email: newUser.email,
+                phone: newUser.phone,
+                fullName: newUser.fullName,
+                role: newUser.role,
+                emailVerified: newUser.emailVerified,
+                phoneVerified: newUser.phoneVerified,
+            },
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ msg: 'Server error' });
