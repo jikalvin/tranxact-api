@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
 
 router.get('/', async (req, res) => {
     try {
@@ -28,6 +29,26 @@ router.get('/', async (req, res) => {
         res.json(annualStatisticData);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching annual statistics' });
+    }
+});
+
+router.get('/transaction-stats', async (req, res) => {
+    try {
+        const pendingRequests = await Transaction.countDocuments({ status: 'pending' });
+        const completedRequests = await Transaction.countDocuments({ status: 'completed' });
+        const rejectedRequests = await Transaction.countDocuments({ status: 'failed' });
+        const totalExchanges = await Transaction.countDocuments();
+
+        const transactionStats = {
+            pending: pendingRequests,
+            completed: completedRequests,
+            rejected: rejectedRequests,
+            total: totalExchanges
+        };
+
+        res.json(transactionStats);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching transaction statistics' });
     }
 });
 

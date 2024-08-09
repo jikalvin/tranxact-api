@@ -48,6 +48,9 @@ const transactionSchema = new mongoose.Schema({
     walletAddress: {
         type: String,
     },
+    method: {
+        type: String,
+    },
     phoneNumber: {
         type: String,
     },
