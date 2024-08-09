@@ -1,5 +1,6 @@
 const Transaction = require('../models/Transaction');
 const Crypto = require('../models/cryptoModel');
+const { io } = require('../app');
 
 exports.getAllTransactions = async (req, res) => {
   try {
@@ -34,6 +35,9 @@ exports.createTransaction = async (req, res) => {
     });
 
     const savedTransaction = await newTransaction.save();
+
+    io.emit('newTransaction', newTransaction);
+    
     res.status(201).json(savedTransaction);
   } catch (error) {
     res.status(500).json({ message: error.message });
