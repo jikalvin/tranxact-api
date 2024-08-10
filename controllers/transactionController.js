@@ -1,6 +1,6 @@
 const Transaction = require('../models/Transaction');
 const Crypto = require('../models/cryptoModel');
-const { io } = require('../app');
+const socketIO = require('../socket');
 
 exports.getAllTransactions = async (req, res) => {
   try {
@@ -35,11 +35,19 @@ exports.createTransaction = async (req, res) => {
     });
 
     const savedTransaction = await newTransaction.save();
+    console.log("Transaction saved")
 
-    io.emit('newTransaction', newTransaction);
-    
+    try {
+      const io = socketIO.getIo();
+      io.emit('newTransaction', newTransaction);
+      console.log("Transaction emitted");
+    } catch (error) {
+      console.error("Error emitting socket event:", error.message);
+    }
+
     res.status(201).json(savedTransaction);
   } catch (error) {
+    console.error('Error creating transaction:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -55,7 +63,6 @@ exports.updateTransaction = async (req, res) => {
   }
 };
 
-//function to get user transaction
 exports.getUserTransaction = async (req, res) => {
   try {
     const transactions = await Transaction.find({ userId: req.user.id });

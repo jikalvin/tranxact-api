@@ -4,7 +4,7 @@ dotenv.config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
-const socketIo = require('socket.io');
+const socketIO = require('./socket');
 const connectDB = require('./config/db');
 const admin = require('./firebase');
 const authRoutes = require('./routes/auth');
@@ -21,14 +21,14 @@ const limitController = require('./controllers/limitController');
 const paymentMethodRoutes = require('./routes/paymentMethodRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
 
-
 // Connect Database
 connectDB();
 
 const app = express();
 
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIO.init(server);
+let ioInstance;
 
 // Init Middleware
 app.use(express.json());
@@ -56,11 +56,12 @@ io.on('connection', (socket) => {
     console.log('Client disconnected');
   });
 });
+ioInstance = io;
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });
 
-module.exports = { app, io, server };
+module.exports = { app, server };
