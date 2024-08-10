@@ -57,6 +57,15 @@ exports.updateTransaction = async (req, res) => {
   const updateData = req.body;
   try {
     const updatedTransaction = await Transaction.findByIdAndUpdate(id, updateData, { new: true });
+
+    try {
+      const io = socketIO.getIo();
+      io.emit('updatedTransaction', updatedTransaction);
+      console.log("Transaction emitted");
+    } catch (error) {
+      console.error("Error emitting socket event:", error.message);
+    }
+
     res.status(200).json(updatedTransaction);
   } catch (error) {
     res.status(500).json({ message: error.message });
