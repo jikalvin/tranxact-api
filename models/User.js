@@ -50,6 +50,9 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: "user",
     },
+    residence: {
+        type: String,
+    },
 });
 
 module.exports = mongoose.model('User', UserSchema);
