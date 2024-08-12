@@ -1,5 +1,5 @@
 const KYC = require('../models/kycModel');
-const { uploadDocument } = require('../utils/documentUploader'); // Assuming you have this utility function
+const { uploadDocument } = require('../utils/documentUploader');
 
 exports.getAllKycRecords = async (req, res) => {
   try {
@@ -10,22 +10,37 @@ exports.getAllKycRecords = async (req, res) => {
   }
 };
 
-exports.createKycRecord = async (req, res) => {
-  const { userId, documentType, documentNumber, level, status } = req.body;
-  const { document } = req.files; // Assuming you're using a file upload middleware
-
+exports.submitKycStep = async (req, res) => {
+  const { userId, step, ...stepData } = req.body;
+  
   try {
-    const uploadedDocument = await uploadDocument(document);
-    const newKycRecord = new KYC({
-      userId,
-      documentType,
-      documentNumber,
-      level,
-      status,
-      document: uploadedDocument.url
+    let kycRecord = await KYC.findOne({ userId });
+
+    if (!kycRecord) {
+      kycRecord = new KYC({ userId, step });
+    }
+
+    // Update the fields for the current step
+    Object.keys(stepData).forEach(key => {
+      kycRecord[key] = stepData[key];
     });
-    await newKycRecord.save();
-    res.status(201).json(newKycRecord);
+
+    // Handle file uploads
+    if (req.files) {
+      for (const [key, file] of Object.entries(req.files)) {
+        const uploadedFile = await uploadDocument(file);
+        kycRecord[key] = uploadedFile.url;
+      }
+    }
+
+    kycRecord.step = step;
+    
+    if (step === 4) {
+      kycRecord.completedAt = new Date();
+    }
+
+    await kycRecord.save();
+    res.status(200).json(kycRecord);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
