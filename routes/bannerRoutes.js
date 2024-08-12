@@ -5,7 +5,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const upload = require('../utils/uploadBanner'); // Assuming 'uploadBanner' utility is added
 
 // Route to create a new banner
-router.post('/', authMiddleware, upload.single('banner'), BannerController.createBanner);
+router.post('/', upload.single('banner'), BannerController.createBanner);
 
 // Route to get all banners
 router.get('/', BannerController.getAllBanners);
