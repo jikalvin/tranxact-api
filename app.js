@@ -26,15 +26,15 @@ connectDB();
 
 const app = express();
 
+// Set up CORS middleware
+app.use(cors());
+
 const server = http.createServer(app);
 const io = socketIO.init(server);
 let ioInstance;
 
 // Init Middleware
 app.use(express.json());
-
-// Set up CORS middleware
-app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
