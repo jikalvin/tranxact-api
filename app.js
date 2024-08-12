@@ -36,6 +36,9 @@ app.use(express.json());
 // Set up CORS middleware
 app.use(cors());
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Define Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/cryptos', authMiddleware, cryptoRoutes);

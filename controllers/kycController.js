@@ -16,6 +16,10 @@ exports.submitKycStep = async (req, res) => {
   try {
     let kycRecord = await KYC.findOne({ userId });
 
+    if (!userId || !step) {
+      return res.status(400).json({ message: "UserId and step are required" });
+    }
+
     if (!kycRecord) {
       kycRecord = new KYC({ userId, step });
     }
