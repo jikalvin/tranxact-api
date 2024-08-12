@@ -11,41 +11,43 @@ exports.getAllKycRecords = async (req, res) => {
 };
 
 exports.submitKycStep = async (req, res) => {
-  const { userId, step, ...stepData } = req.body;
-  
   try {
-    let kycRecord = await KYC.findOne({ userId });
+      const { userId, step, ...stepData } = req.body;
 
-    if (!userId || !step) {
-      return res.status(400).json({ message: "UserId and step are required" });
-    }
-
-    if (!kycRecord) {
-      kycRecord = new KYC({ userId, step });
-    }
-
-    // Update the fields for the current step
-    Object.keys(stepData).forEach(key => {
-      kycRecord[key] = stepData[key];
-    });
-
-    // Handle file uploads
-    if (req.files) {
-      for (const [key, file] of Object.entries(req.files)) {
-        const uploadedFile = await uploadDocument(file);
-        kycRecord[key] = uploadedFile.url;
+      if (!userId || !step) {
+          return res.status(400).json({ message: "UserId and step are required" });
       }
-    }
 
-    kycRecord.step = step;
-    
-    if (step === 4) {
-      kycRecord.completedAt = new Date();
-    }
+      let kycRecord = await KYC.findOne({ userId });
 
-    await kycRecord.save();
-    res.status(200).json(kycRecord);
+      if (!kycRecord) {
+          kycRecord = new KYC({ userId, step: parseInt(step) });
+      } else {
+          kycRecord.step = parseInt(step);
+      }
+
+      // Update the fields for the current step
+      Object.keys(stepData).forEach(key => {
+          if (stepData[key] !== undefined) {
+              kycRecord[key] = stepData[key];
+          }
+      });
+
+      // Handle file uploads
+      if (req.files && req.files.length > 0) {
+          req.files.forEach(file => {
+              kycRecord[file.fieldname] = file.path; // or however you want to store the file reference
+          });
+      }
+
+      if (parseInt(step) === 4) {
+          kycRecord.completedAt = new Date();
+      }
+
+      await kycRecord.save();
+      res.status(200).json(kycRecord);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+      console.error('KYC submission error:', error);
+      res.status(500).json({ message: error.message });
   }
 };
