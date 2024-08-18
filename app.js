@@ -22,6 +22,7 @@ const annualStatisticRoutes = require('./routes/annualStatistics');
 const limitController = require('./controllers/limitController');
 const paymentMethodRoutes = require('./routes/paymentMethodRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
+const path = require('path');
 
 // Connect Database
 connectDB();
@@ -37,6 +38,9 @@ let ioInstance;
 
 // Init Middleware
 app.use(express.json());
+
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
