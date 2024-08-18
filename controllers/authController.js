@@ -53,7 +53,7 @@ exports.register = async (req, res) => {
         if (phone) {
             await twilioClient.messages.create({
                 body: `Your verification code is: ${newUser.phoneVerificationToken}`,
-                // from: process.env.TWILIO_PHONE_NUMBER,
+                from: process.env.TWILIO_PHONE_NUMBER,
                 to: phone
             });
         }
