@@ -3,6 +3,10 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 const admin = require('../firebase'); // Import Firebase Admin SDK
+const twilio = require('twilio');
+
+// Twilio configuration
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 // User registration
 exports.register = async (req, res) => {
@@ -19,8 +23,6 @@ exports.register = async (req, res) => {
         let query = { email };
         if (phone) {
             query = { $or: [{ email }, { phone }] };
-        } else {
-            query = { email };
         }
 
         const existingUser = await User.findOne(query);
@@ -45,8 +47,15 @@ exports.register = async (req, res) => {
         // Send verification email if email is provided
         if (email) {
             await sendEmail(email, 'Verify your email', `Your verification code is: ${newUser.emailVerificationToken}`);
-        } else if (phone) {
-            // await sendSMS(phone, `Your verification code is: ${newUser.phoneVerificationToken}`);
+        }
+
+        // Send SMS verification if phone is provided
+        if (phone) {
+            await twilioClient.messages.create({
+                body: `Your verification code is: ${newUser.phoneVerificationToken}`,
+                // from: process.env.TWILIO_PHONE_NUMBER,
+                to: phone
+            });
         }
 
         // Create JWT token
@@ -65,6 +74,35 @@ exports.register = async (req, res) => {
                 phoneVerified: newUser.phoneVerified,
             },
         });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
+
+// Verify Phone
+exports.verifyPhone = async (req, res) => {
+    const { phone, token } = req.body;
+
+    try {
+        const user = await User.findOne({ phone });
+
+        if (!user || user.phoneVerificationToken !== token) {
+            return res.status(400).json({ msg: 'Invalid token or user not found' });
+        }
+
+        user.phoneVerified = true;
+        user.phoneVerificationToken = undefined;
+
+        await user.save();
+
+        // Update Firebase user
+        await admin.auth().updateUser(user._id.toString(), {
+            phoneNumber: phone,
+            phoneNumberVerified: true
+        });
+
+        res.status(200).json({ msg: 'Phone verified successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ msg: 'Server error' });
@@ -150,34 +188,33 @@ exports.verifyEmail = async (req, res) => {
     }
 };
 
-// Verify Phone
-exports.verifyPhone = async (req, res) => {
-    const { phone, token } = req.body;
+// exports.verifyPhone = async (req, res) => {
+//     const { phone, token } = req.body;
 
-    try {
-        const user = await User.findOne({ phone });
+//     try {
+//         const user = await User.findOne({ phone });
 
-        if (!user || user.phoneVerificationToken !== token) {
-            return res.status(400).json({ msg: 'Invalid token or user not found' });
-        }
+//         if (!user || user.phoneVerificationToken !== token) {
+//             return res.status(400).json({ msg: 'Invalid token or user not found' });
+//         }
 
-        user.phoneVerified = true;
-        user.phoneVerificationToken = undefined;
+//         user.phoneVerified = true;
+//         user.phoneVerificationToken = undefined;
 
-        await user.save();
+//         await user.save();
 
-        // Update Firebase user
-        await admin.auth().updateUser(user._id.toString(), {
-            phoneNumber: phone,
-            phoneNumberVerified: true
-        });
+//         // Update Firebase user
+//         await admin.auth().updateUser(user._id.toString(), {
+//             phoneNumber: phone,
+//             phoneNumberVerified: true
+//         });
 
-        res.status(200).json({ msg: 'Phone verified successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Server error' });
-    }
-};
+//         res.status(200).json({ msg: 'Phone verified successfully' });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ msg: 'Server error' });
+//     }
+// };
 
 // Login
 exports.login = async (req, res) => {
