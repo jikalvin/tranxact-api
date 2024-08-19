@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     const { message } = req.body;
-    const userId = req.user.id; // Assuming the user ID is attached to the request by the auth middleware
+    const userId = req.user._id; // Assuming the user ID is attached to the request by the auth middleware
   
     if (!message) {
       return res.status(400).json({ message: 'Message is required' });
