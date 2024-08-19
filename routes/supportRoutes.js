@@ -14,8 +14,9 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     const { message, userId } = req.body;
+    console.log(req.body);
     // const userId = req.user._id;
-      
+
     if (!message) {
       return res.status(400).json({ message: 'Message is required' });
     }
