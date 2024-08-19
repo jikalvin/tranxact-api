@@ -22,6 +22,7 @@ const annualStatisticRoutes = require('./routes/annualStatistics');
 const limitController = require('./controllers/limitController');
 const paymentMethodRoutes = require('./routes/paymentMethodRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
+const supportRoutes = require('./routes/supportRoutes');
 const path = require('path');
 
 // Connect Database
@@ -58,6 +59,7 @@ app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/annual-statistics', authMiddleware, annualStatisticRoutes);
 app.use('/api/payment-methods', paymentMethodRoutes);
 app.use('/api/banner', bannerRoutes);
+app.use('/api/support', supportRoutes);
 
 io.on('connection', (socket) => {
   console.log('New client connected');
