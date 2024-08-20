@@ -53,7 +53,7 @@ router.post('/:id/respond', async (req, res) => {
 
     supportRequest.responses.push({
       response,
-      responder: userId, // Assume req.user is set by authMiddleware
+      responder: req.user._id, // Assume req.user is set by authMiddleware
     });
 
     if (supportRequest.status === 'Open') {
