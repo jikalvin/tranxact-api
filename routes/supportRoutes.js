@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
 
 // POST /api/support/:id/respond - Respond to a support request
 router.post('/:id/respond', async (req, res) => {
-  const { response } = req.body;
+  const { response, userId } = req.body;
 
   if (!response) {
     return res.status(400).json({ message: 'Response is required' });
@@ -53,7 +53,7 @@ router.post('/:id/respond', async (req, res) => {
 
     supportRequest.responses.push({
       response,
-      responder: req.user.id, // Assume req.user is set by authMiddleware
+      responder: userId, // Assume req.user is set by authMiddleware
     });
 
     if (supportRequest.status === 'Open') {
