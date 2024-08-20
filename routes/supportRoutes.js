@@ -5,7 +5,7 @@ const SupportRequest = require('../models/supportModel');
 // GET /api/support - Get all support requests
 router.get('/', async (req, res) => {
   try {
-    const supportRequests = await SupportRequest.find();
+    const supportRequests = await SupportRequest.find().populate('user');
     res.json(supportRequests);
   } catch (err) {
     console.log(err)
